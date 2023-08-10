@@ -1,0 +1,16 @@
+WIA = 0
+INFO = 1
+ST1 = 2
+HX = 3
+HY = 5
+HZ = 7
+
+ST2 = 9
+HOFL = 3
+
+CNTL1 = 10
+CNTL2 = 11
+ASTC = 12
+ASAX = 16
+ASAY = 17
+ASAZ = 18

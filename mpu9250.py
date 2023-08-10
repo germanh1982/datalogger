@@ -1,6 +1,7 @@
 from struct import unpack
 from enum import Enum
 import mpu9250regs as mpuregs
+from time import time
 
 class AccelFSV:
     @classmethod
@@ -55,7 +56,9 @@ class MPU9250:
     def _hw_initialize(self):
         # hard reset
         self._writereg(mpuregs.PWR_MGMT_1, 1 << mpuregs.H_RESET)
+        # i2c passthrough for magnetometer to host direct communication
         self._writereg(mpuregs.USER_CTRL, 1 << mpuregs.I2C_MST_EN)
+        self._writereg(mpuregs.INT_PIN_CFG, 1 << mpuregs.BYPASS_EN)
 
     def _writereg(self, reg, value):
         self._bus.write_i2c_block_data(self._devaddr, reg, [value])
@@ -73,18 +76,18 @@ class MPU9250:
         self._gfsv = self.gfsv
 
     def read_all(self):
+        ts = time()
         data = self._bus.read_i2c_block_data(self._devaddr, mpuregs.ACCEL_XOUT, mpuregs.EXT_SENS_DATA - mpuregs.ACCEL_XOUT)
         ax, ay, az, temp, gx, gy, gz = unpack('>hhhhhhh', bytes(data))
+        ax *= self._afsv.SCALE_FACTOR
+        ay *= self._afsv.SCALE_FACTOR
+        az *= self._afsv.SCALE_FACTOR
+        temp /= 321.0 + 21
+        gx *= self._gfsv.SCALE_FACTOR
+        gy *= self._gfsv.SCALE_FACTOR
+        gz *= self._gfsv.SCALE_FACTOR
 
-        out = []
-        out.append(ax * self._afsv.SCALE_FACTOR)
-        out.append(ay * self._afsv.SCALE_FACTOR)
-        out.append(az * self._afsv.SCALE_FACTOR)
-        out.append(temp / 321.0 + 21)
-        out.append(gx * self._gfsv.SCALE_FACTOR)
-        out.append(gy * self._gfsv.SCALE_FACTOR)
-        out.append(gz * self._gfsv.SCALE_FACTOR)
-        return out
+        return (ts, (ax, ay, az), temp, (gx, gy, gz))
 
     @property
     def afsv(self):
