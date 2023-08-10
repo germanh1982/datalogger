@@ -4,6 +4,8 @@ import ak8963regs as akr
 from time import time
 
 class AK8963:
+    SCALE_FACTOR = 0.6 # uT / LSB
+
     def _hw_initialize(self):
         self._writereg(akr.CNTL1, 1 << 4 | 6 << 0)
         self._readreg(akr.ST2)
@@ -24,5 +26,8 @@ class AK8963:
         ts = time()
         data = self._bus.read_i2c_block_data(self._devaddr, akr.HX, 7)
         hx, hy, hz, status = unpack('<hhhB', bytes(data))
-        return (ts, hx, hy, hz, status >> akr.HOFL & 1)
+        hx *= self.SCALE_FACTOR
+        hy *= self.SCALE_FACTOR
+        hz *= self.SCALE_FACTOR
+        return (ts, (hx, hy, hz), status >> akr.HOFL & 1 == 1)
 
