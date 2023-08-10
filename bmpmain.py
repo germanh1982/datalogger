@@ -1,10 +1,36 @@
-from bmp280 import BMP280
+#!/usr/bin/python3
 from smbus import SMBus
-from time import sleep
+from bmp280 import BMP280
+import paho.mqtt.client as mqttc
+from json import dumps
+from time import sleep, monotonic
+from argparse import ArgumentParser
 
-dev = BMP280(SMBus(1), 0x76)
+def main():
+    dev = BMP280(SMBus(args.bus), args.i2caddr)
+    while True:
+        start = monotonic()
+        count = 0
+        while monotonic() - start < 1:
+            ts, temp, pres = dev.read_all()
+            client.publish(args.topic, dumps({'ts': ts, 'temp': temp, 'pres': pres}))
+            count += 1
+            sleep(args.delay)
+        print(f"samples/sec = {count}")
 
-while True:
-    ts, temp, pres = dev.read_all()
-    print(pres)
-    sleep(0.05)
+if __name__ == "__main__":
+    p = ArgumentParser()
+    p.add_argument('-b', '--bus', type=int, default=1, help="I2C bus where the sensor is connected.")
+    p.add_argument('-a', '--i2caddr', type=int, default=12, help="Sensor I2C address.")
+    p.add_argument('-t', '--topic', default='magn', help="MQTT topic used to publish samples.")
+    p.add_argument('-d', '--delay', type=int, default=0, help="Minimum delay between samples [ms].")
+    args = p.parse_args()
+
+    client = mqttc.Client()
+    client.connect('localhost')
+    client.loop_start()
+
+    try:
+        main()
+    except KeyboardInterrupt:
+        client.loop_stop()

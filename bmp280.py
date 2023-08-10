@@ -13,7 +13,7 @@ class BMP280:
         value = self._bus.read_i2c_block_data(self._devaddr, reg, 1)
         return value[0]
 
-    def __init__(self, bus, devaddr):
+    def __init__(self, bus, devaddr = 0x76):
         self._bus = bus
         self._devaddr = devaddr
         self._hw_initialize()

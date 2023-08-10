@@ -17,7 +17,7 @@ class AK8963:
         value = self._bus.read_i2c_block_data(self._devaddr, reg, 1)
         return value[0]
 
-    def __init__(self, bus, devaddr):
+    def __init__(self, bus, devaddr = 0xc):
         self._bus = bus
         self._devaddr = devaddr
         self._hw_initialize()
@@ -29,5 +29,5 @@ class AK8963:
         hx *= self.SCALE_FACTOR
         hy *= self.SCALE_FACTOR
         hz *= self.SCALE_FACTOR
-        return (ts, (hx, hy, hz), status >> akr.HOFL & 1 == 1)
+        return (ts, hx, hy, hz, status >> akr.HOFL & 1 == 1)
 

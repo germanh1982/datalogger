@@ -67,7 +67,7 @@ class MPU9250:
         value = self._bus.read_i2c_block_data(self._devaddr, reg, 1)
         return value[0]
 
-    def __init__(self, bus, devaddr):
+    def __init__(self, bus, devaddr = 0x68):
         self._bus = bus
         self._devaddr = devaddr
         self._hw_initialize()
@@ -77,17 +77,9 @@ class MPU9250:
 
     def read_all(self):
         ts = time()
-        data = self._bus.read_i2c_block_data(self._devaddr, mpuregs.ACCEL_XOUT, mpuregs.EXT_SENS_DATA - mpuregs.ACCEL_XOUT)
-        ax, ay, az, temp, gx, gy, gz = unpack('>hhhhhhh', bytes(data))
-        ax *= self._afsv.SCALE_FACTOR
-        ay *= self._afsv.SCALE_FACTOR
-        az *= self._afsv.SCALE_FACTOR
-        temp /= 321.0 + 21
-        gx *= self._gfsv.SCALE_FACTOR
-        gy *= self._gfsv.SCALE_FACTOR
-        gz *= self._gfsv.SCALE_FACTOR
-
-        return (ts, (ax, ay, az), temp, (gx, gy, gz))
+        data = self._bus.read_i2c_block_data(self._devaddr, mpuregs.ACCEL_XOUT, 14)
+        # (ts, ax, ay, az, temp, gx, gy, gz)
+        return (ts, *unpack('>hhhhhhh', bytes(data)))
 
     @property
     def afsv(self):
