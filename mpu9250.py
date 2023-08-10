@@ -1,7 +1,6 @@
-from smbus import SMBus
 from struct import unpack
-from time import sleep, monotonic
 from enum import Enum
+import mpu9250regs as mpuregs
 
 class AccelFSV:
     @classmethod
@@ -53,24 +52,10 @@ class GyroFSV2000DPS(GyroFSV):
 
 class MPU9250:
     # registers
-    SMPLRT_DIV = 25
-    CONFIG = 26
-    GYRO_CONFIG = 27
-    ACCEL_CONFIG = 28
-    ACCEL_CONFIG2 = 29
-    FIFO_EN = 35
-    PWR_MGMT1 = 107
-    PWR_MGMT2 = 108
-    FIFO_COUNT = 114
-    FIFO_RW = 116
-    WHO_AM_I = 117
-
-    BULK_READ_BASE = 59
-    BULK_READ_SIZE = 14
-
     def _hw_initialize(self):
-        #self._bus.write_i2c_block_data(self._devaddr, SMPLRT_DIV, 
-        pass
+        # hard reset
+        self._writereg(mpuregs.PWR_MGMT_1, 1 << mpuregs.H_RESET)
+        self._writereg(mpuregs.USER_CTRL, 1 << mpuregs.I2C_MST_EN)
 
     def _writereg(self, reg, value):
         self._bus.write_i2c_block_data(self._devaddr, reg, [value])
@@ -88,7 +73,7 @@ class MPU9250:
         self._gfsv = self.gfsv
 
     def read_all(self):
-        data = self._bus.read_i2c_block_data(self._devaddr, self.BULK_READ_BASE, self.BULK_READ_SIZE)
+        data = self._bus.read_i2c_block_data(self._devaddr, mpuregs.ACCEL_XOUT, mpuregs.EXT_SENS_DATA - mpuregs.ACCEL_XOUT)
         ax, ay, az, temp, gx, gy, gz = unpack('>hhhhhhh', bytes(data))
 
         out = []
@@ -103,39 +88,25 @@ class MPU9250:
 
     @property
     def afsv(self):
-        regvalue = self._readreg(self.ACCEL_CONFIG)
+        regvalue = self._readreg(mpuregs.ACCEL_CONFIG)
         return AccelFSV.from_value(regvalue >> 3 & 3)
 
     @afsv.setter
     def afsv(self, sens):
         assert isinstance(sens, AccelFSV)
-        reg = self._readreg(self.ACCEL_CONFIG)
-        self._writereg(self.ACCEL_CONFIG, reg & ~0x18 | sens.REGVALUE << 3)
+        reg = self._readreg(mpuregs.ACCEL_CONFIG)
+        self._writereg(mpuregs.ACCEL_CONFIG, reg & ~0x18 | sens.REGVALUE << 3)
         self._afsv = sens
 
     @property
     def gfsv(self):
-        regvalue = self._readreg(self.GYRO_CONFIG)
+        regvalue = self._readreg(mpuregs.GYRO_CONFIG)
         return GyroFSV.from_value(regvalue >> 3 & 3)
 
     @gfsv.setter
     def gfsv(self, sens):
         assert isinstance(sens, GyroFSV)
-        reg = self._readreg(self.GYRO_CONFIG)
-        self._writereg(self.GYRO_CONFIG, reg & ~0x18 | sens.REGVALUE << 3)
+        reg = self._readreg(mpuregs.GYRO_CONFIG)
+        self._writereg(mpuregs.GYRO_CONFIG, reg & ~0x18 | sens.REGVALUE << 3)
         self._gfsv = sens
 
-bus = SMBus(1)
-imu = MPU9250(bus, 0x68)
-
-print(f"Accel sens = {imu.afsv}")
-imu.afsv = AccelFSV2G()
-print(f"Accel sens = {imu.afsv}")
-
-print(f"Gyro sens = {imu.gfsv}")
-imu.gfsv = GyroFSV250DPS()
-print(f"Gyro sens = {imu.gfsv}")
-
-while True:
-    print(imu.read_all())
-    sleep(0.02)
