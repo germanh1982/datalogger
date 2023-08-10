@@ -1,0 +1,18 @@
+TEMP = 0xfa
+PRESS = 0xf7
+
+CONFIG = 0xf5
+T_SB = 5
+FILTER = 2
+SPI3W_EN = 0
+
+CTRL_MEAS = 0xf4
+OSRS_T = 5
+OSRS_P = 2
+MODE = 0
+
+STATUS = 0xf3
+RESET = 0xe0
+ID = 0xD0
+CALIB = 0x88
+
