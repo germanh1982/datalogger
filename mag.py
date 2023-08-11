@@ -22,7 +22,7 @@ if __name__ == "__main__":
     p = ArgumentParser()
     p.add_argument('-b', '--bus', type=int, default=1, help="I2C bus where the sensor is connected.")
     p.add_argument('-a', '--i2caddr', type=int, default=0xc, help="Sensor I2C address.")
-    p.add_argument('-t', '--topic', default='magn', help="MQTT topic used to publish samples.")
+    p.add_argument('-t', '--topic', default='mag', help="MQTT topic used to publish samples.")
     p.add_argument('-d', '--delay', type=float, default=0.05, help="Minimum delay between samples [ms].")
     args = p.parse_args()
 
