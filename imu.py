@@ -12,8 +12,8 @@ def main():
         start = monotonic()
         count = 0
         while monotonic() - start < 1:
-            ts, ax, ay, az, temp, gx, gy, gz = dev.read_all()
-            client.publish(args.topic, dumps({'ts': ts, 'acc': [ax, ay, az], 'gyr': [gx, gy, gz]}))
+            ts, ax, ay, az, gx, gy, gz, temp = dev.read_all()
+            client.publish(args.topic, dumps({'ts': ts, 'acc': [ax, ay, az], 'gyr': [gx, gy, gz], 'temp': temp}))
             count += 1
             sleep(args.delay)
         print(f"samples/sec = {count}")
