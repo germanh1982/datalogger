@@ -2,9 +2,11 @@
 from smbus import SMBus
 import mpu9250 as mpu
 from argparse import ArgumentParser
+from time import sleep
 
 def main():
     dev = mpu.MPU9250(SMBus(args.bus), args.i2caddr)
+    sleep(0.5)
 
 if __name__ == "__main__":
     p = ArgumentParser()
