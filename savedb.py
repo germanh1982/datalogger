@@ -61,6 +61,9 @@ def main():
                 lastcommit = time()
 
     except KeyboardInterrupt:
+        pass
+
+    finally:
         print("Committing to disk..")
         db.commit()
 
