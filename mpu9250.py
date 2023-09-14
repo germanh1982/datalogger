@@ -67,13 +67,13 @@ class MPU9250:
         value = self._bus.read_i2c_block_data(self._devaddr, reg, 1)
         return value[0]
 
-    def __init__(self, bus, devaddr = 0x68):
+    def __init__(self, bus, devaddr = 0x68, afsv=AccelFSV16G(), gfsv=GyroFSV2000DPS()):
         self._bus = bus
         self._devaddr = devaddr
         self._hw_initialize()
 
-        self._afsv = self.afsv
-        self._gfsv = self.gfsv
+        self.afsv = afsv
+        self.gfsv = gfsv
 
     def read_all(self):
         ts = time()
@@ -111,4 +111,3 @@ class MPU9250:
         reg = self._readreg(mpuregs.GYRO_CONFIG)
         self._writereg(mpuregs.GYRO_CONFIG, reg & ~0x18 | sens.REGVALUE << 3)
         self._gfsv = sens
-

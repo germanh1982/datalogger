@@ -5,6 +5,7 @@ import paho.mqtt.client as mqttc
 from json import dumps
 from time import sleep, monotonic
 from argparse import ArgumentParser
+import logging
 
 def main():
     dev = AK8963(SMBus(args.bus), args.i2caddr)
@@ -16,7 +17,7 @@ def main():
             client.publish(args.topic, dumps({'ts': ts, 'mag': [hx, hy, hz], 'ov': ovf}))
             count += 1
             sleep(args.delay)
-        print(f"samples/sec = {count}")
+        log.info(f"samples/sec: {count}")
 
 if __name__ == "__main__":
     p = ArgumentParser(description="Magnetometer poller and MQTT publisher.")
@@ -24,7 +25,11 @@ if __name__ == "__main__":
     p.add_argument('-a', '--i2caddr', type=int, default=0xc, help="Sensor I2C address.")
     p.add_argument('-t', '--topic', default='mag', help="MQTT topic used to publish samples.")
     p.add_argument('-d', '--delay', type=float, default=0.01, help="Minimum delay between samples [ms].")
+    p.add_argument('-l', '--loglevel', choices=['debug', 'info', 'warning', 'error', 'critical', 'none'], default='info')
     args = p.parse_args()
+
+    logging.basicConfig(level=args.loglevel.upper())
+    log = logging.getLogger()
 
     client = mqttc.Client()
     client.connect('localhost')
