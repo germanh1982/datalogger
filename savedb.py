@@ -58,6 +58,8 @@ def main():
             # commit to disk every 5 seconds
             if time() - lastcommit > 5:
                 db.commit()
+                lastcommit = time()
+
     except KeyboardInterrupt:
         print("Committing to disk..")
         db.commit()
